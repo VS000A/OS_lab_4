@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include "message.h"
-
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -10,7 +9,7 @@ int main(int argc, char* argv[]) {
     SetConsoleOutputCP(1251);
 
     if (argc < 2) {
-        cout << "Èñïîëüçîâàíèå: sender.exe <èìÿ_ôàéëà>" << endl;
+        cout << "ÃˆÃ±Ã¯Ã®Ã«Ã¼Ã§Ã®Ã¢Ã Ã­Ã¨Ã¥: sender.exe <Ã¨Ã¬Ã¿_Ã´Ã Ã©Ã«Ã >" << endl;
         return 1;
     }
 
@@ -21,18 +20,18 @@ int main(int argc, char* argv[]) {
     HANDLE hCanReadEvent = EventUtils::openNamedEvent(CAN_READ_EVENT);
 
     if (!hReadyEvent || !hCanWriteEvent || !hCanReadEvent) {
-        cout << "Îøèáêà îòêðûòèÿ ñîáûòèé!" << endl;
+        cout << "ÃŽÃ¸Ã¨Ã¡ÃªÃ  Ã®Ã²ÃªÃ°Ã»Ã²Ã¨Ã¿ Ã±Ã®Ã¡Ã»Ã²Ã¨Ã©!" << endl;
         return static_cast<int>(ErrorCode::EVENT_OPEN_ERROR);
     }
 
-    cout << "Ïðîöåññ Sender çàïóùåí. Ôàéë: " << fileName << endl;
+    cout << "ÃÃ°Ã®Ã¶Ã¥Ã±Ã± Sender Ã§Ã Ã¯Ã³Ã¹Ã¥Ã­. Ã”Ã Ã©Ã«: " << fileName << endl;
 
     EventUtils::signalEvent(hReadyEvent);
-    cout << "Ñèãíàë ãîòîâíîñòè îòïðàâëåí Receiver'ó" << endl;
+    cout << "Ã‘Ã¨Ã£Ã­Ã Ã« Ã£Ã®Ã²Ã®Ã¢Ã­Ã®Ã±Ã²Ã¨ Ã®Ã²Ã¯Ã°Ã Ã¢Ã«Ã¥Ã­ Receiver'Ã³" << endl;
 
     string command;
     while (true) {
-        cout << "\nÂâåäèòå êîìàíäó (send - îòïðàâèòü ñîîáùåíèå, exit - âûõîä): ";
+        cout << "\nÃ‚Ã¢Ã¥Ã¤Ã¨Ã²Ã¥ ÃªÃ®Ã¬Ã Ã­Ã¤Ã³ (send - Ã®Ã²Ã¯Ã°Ã Ã¢Ã¨Ã²Ã¼ Ã±Ã®Ã®Ã¡Ã¹Ã¥Ã­Ã¨Ã¥, exit - Ã¢Ã»ÃµÃ®Ã¤): ";
         cin >> command;
 
         if (command == "exit") {
@@ -42,13 +41,13 @@ int main(int argc, char* argv[]) {
             EventUtils::waitForEvent(hCanWriteEvent);
 
             string messageText;
-            cout << "Ââåäèòå òåêñò ñîîáùåíèÿ (ìàêñ. 19 ñèìâîëîâ): ";
+            cout << "Ã‚Ã¢Ã¥Ã¤Ã¨Ã²Ã¥ Ã²Ã¥ÃªÃ±Ã² Ã±Ã®Ã®Ã¡Ã¹Ã¥Ã­Ã¨Ã¿ (Ã¬Ã ÃªÃ±. 19 Ã±Ã¨Ã¬Ã¢Ã®Ã«Ã®Ã¢): ";
             cin.ignore(); 
             getline(cin, messageText);
 
             if (messageText.length() >= MAX_MESSAGE_LENGTH) {
                 messageText = messageText.substr(0, MAX_MESSAGE_LENGTH - 1);
-                cout << "Ñîîáùåíèå îáðåçàíî äî: " << messageText << endl;
+                cout << "Ã‘Ã®Ã®Ã¡Ã¹Ã¥Ã­Ã¨Ã¥ Ã®Ã¡Ã°Ã¥Ã§Ã Ã­Ã® Ã¤Ã®: " << messageText << endl;
             }
 
             HANDLE hFile = FileUtils::openMessageFile(fileName.c_str());
@@ -61,23 +60,23 @@ int main(int argc, char* argv[]) {
                         msg.setText(messageText.c_str());
                         FileUtils::writeMessage(hFile, msg);
 
-                        cout << "Ñîîáùåíèå îòïðàâëåíî: " << messageText << endl;
+                        cout << "Ã‘Ã®Ã®Ã¡Ã¹Ã¥Ã­Ã¨Ã¥ Ã®Ã²Ã¯Ã°Ã Ã¢Ã«Ã¥Ã­Ã®: " << messageText << endl;
 
                         EventUtils::resetEvent(hCanWriteEvent);
                         EventUtils::signalEvent(hCanReadEvent);
                     }
                     else {
-                        cout << "Ôàéë çàíÿò, îæèäàíèå îñâîáîæäåíèÿ..." << endl;
+                        cout << "Ã”Ã Ã©Ã« Ã§Ã Ã­Ã¿Ã², Ã®Ã¦Ã¨Ã¤Ã Ã­Ã¨Ã¥ Ã®Ã±Ã¢Ã®Ã¡Ã®Ã¦Ã¤Ã¥Ã­Ã¨Ã¿..." << endl;
                     }
                 }
                 CloseHandle(hFile);
             }
             else {
-                cout << "Îøèáêà îòêðûòèÿ ôàéëà!" << endl;
+                cout << "ÃŽÃ¸Ã¨Ã¡ÃªÃ  Ã®Ã²ÃªÃ°Ã»Ã²Ã¨Ã¿ Ã´Ã Ã©Ã«Ã !" << endl;
             }
         }
         else {
-            cout << "Íåèçâåñòíàÿ êîìàíäà!" << endl;
+            cout << "ÃÃ¥Ã¨Ã§Ã¢Ã¥Ã±Ã²Ã­Ã Ã¿ ÃªÃ®Ã¬Ã Ã­Ã¤Ã !" << endl;
         }
     }
 
@@ -85,6 +84,6 @@ int main(int argc, char* argv[]) {
     CloseHandle(hCanWriteEvent);
     CloseHandle(hCanReadEvent);
 
-    cout << "Ïðîöåññ Sender çàâåðøåí." << endl;
+    cout << "ÃÃ°Ã®Ã¶Ã¥Ã±Ã± Sender Ã§Ã Ã¢Ã¥Ã°Ã¸Ã¥Ã­." << endl;
     return 0;
 }
