@@ -2,104 +2,94 @@
 #include <iostream>
 #include <string>
 #include "message.h"
-
 using namespace std;
 
 int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
-
+    
     string fileName;
-    cout << "Ââåäèòå èìÿ áèíàðíîãî ôàéëà: ";
+    cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð¸Ð¼Ñ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ Ñ„Ð°Ð¹Ð»Ð°: ";
     cin >> fileName;
-
+    
     HANDLE hFile = FileUtils::createMessageFile(fileName.c_str());
-
     if (hFile == INVALID_HANDLE_VALUE) {
-        cout << "Îøèáêà ñîçäàíèÿ ôàéëà!" << endl;
+        cout << "ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ñ„Ð°Ð¹Ð»Ð°!" << endl;
         return static_cast<int>(ErrorCode::FILE_CREATE_ERROR);
     }
-
+    
     Message emptyMsg;
-
     DWORD bytesWritten;
     WriteFile(hFile, &emptyMsg, sizeof(Message), &bytesWritten, NULL);
     CloseHandle(hFile);
-
+    
     HANDLE hReadyEvent = EventUtils::createNamedEvent(SENDER_READY_EVENT, false);
     HANDLE hCanWriteEvent = EventUtils::createNamedEvent(CAN_WRITE_EVENT, true);
     HANDLE hCanReadEvent = EventUtils::createNamedEvent(CAN_READ_EVENT, false);
-
+    
     if (!hReadyEvent || !hCanWriteEvent || !hCanReadEvent) {
-        cout << "Îøèáêà ñîçäàíèÿ ñîáûòèé!" << endl;
+        cout << "ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ ÑÐ¾Ð±Ñ‹Ñ‚Ð¸Ð¹!" << endl;
         return static_cast<int>(ErrorCode::EVENT_CREATE_ERROR);
     }
-
+    
     string commandLine = "sender.exe " + fileName;
-
     STARTUPINFOA si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
-
+    
     if (!CreateProcessA(NULL, (LPSTR)commandLine.c_str(), NULL, NULL, FALSE,
         CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
-        cout << "Îøèáêà çàïóñêà ïðîöåññà Sender!" << endl;
+        cout << "ÐžÑˆÐ¸Ð±ÐºÐ° Ð·Ð°Ð¿ÑƒÑÐºÐ° Ð¿Ñ€Ð¾Ñ†ÐµÑÑÐ° Sender!" << endl;
         return 1;
     }
-
-    cout << "Îæèäàåì ãîòîâíîñòè ïðîöåññà Sender..." << endl;
-
+    
+    cout << "ÐžÐ¶Ð¸Ð´Ð°ÐµÐ¼ Ð³Ð¾Ñ‚Ð¾Ð²Ð½Ð¾ÑÑ‚Ð¸ Ð¿Ñ€Ð¾Ñ†ÐµÑÑÐ° Sender..." << endl;
     WaitForSingleObject(hReadyEvent, INFINITE);
-    cout << "Ïðîöåññ Sender ãîòîâ ê ðàáîòå!" << endl;
-
+    cout << "ÐŸÑ€Ð¾Ñ†ÐµÑÑ Sender Ð³Ð¾Ñ‚Ð¾Ð² Ðº Ñ€Ð°Ð±Ð¾Ñ‚Ðµ!" << endl;
+    
     string command;
     while (true) {
-        cout << "\nÂâåäèòå êîìàíäó (read - ÷èòàòü ñîîáùåíèå, exit - âûõîä): ";
+        cout << "\nÐ’Ð²ÐµÐ´Ð¸Ñ‚Ðµ ÐºÐ¾Ð¼Ð°Ð½Ð´Ñƒ (read - Ñ‡Ñ‚ÐµÐ½Ð¸Ðµ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ñ, exit - Ð²Ñ‹Ñ…Ð¾Ð´): ";
         cin >> command;
-
+        
         if (command == "exit") {
             break;
         }
         else if (command == "read") {
             EventUtils::waitForEvent(hCanReadEvent);
-
+            
             hFile = FileUtils::openMessageFile(fileName.c_str());
-
             if (hFile != INVALID_HANDLE_VALUE) {
                 Message msg;
-
                 if (FileUtils::readMessage(hFile, msg)) {
                     if (msg.isValid()) {
-                        cout << "Ïîëó÷åíî ñîîáùåíèå: " << msg.text << endl;
-
+                        cout << "ÐŸÐ¾Ð»ÑƒÑ‡ÐµÐ½Ð¾ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ: " << msg.text << endl;
                         msg.clear();
                         FileUtils::writeMessage(hFile, msg);
-
                         EventUtils::signalEvent(hCanWriteEvent);
                         EventUtils::resetEvent(hCanReadEvent);
                     }
                     else {
-                        cout << "Íåò ñîîáùåíèé äëÿ ÷òåíèÿ. Îæèäàíèå..." << endl;
+                        cout << "ÐÐµÑ‚ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ð¹ Ð´Ð»Ñ Ñ‡Ñ‚ÐµÐ½Ð¸Ñ. ÐžÐ¶Ð¸Ð´Ð°Ð½Ð¸Ðµ..." << endl;
                     }
                 }
                 CloseHandle(hFile);
             }
         }
         else {
-            cout << "Íåèçâåñòíàÿ êîìàíäà!" << endl;
+            cout << "ÐÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ð°Ñ ÐºÐ¾Ð¼Ð°Ð½Ð´Ð°!" << endl;
         }
     }
-
+    
     TerminateProcess(pi.hProcess, 0);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-
     CloseHandle(hReadyEvent);
     CloseHandle(hCanWriteEvent);
     CloseHandle(hCanReadEvent);
-
-    cout << "Ïðîöåññ Receiver çàâåðøåí." << endl;
+    cout << "ÐŸÑ€Ð¾Ñ†ÐµÑÑ Receiver Ð·Ð°Ð²ÐµÑ€ÑˆÐµÐ½." << endl;
+    
     return 0;
 }
